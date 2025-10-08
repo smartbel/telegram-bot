@@ -43,7 +43,7 @@ async def get_klines(session, symbol, interval, limit):
 
 async def detect_cross(session, symbol, interval):
     try:
-        df = await get_klines(session, symbol, interval, LIMIT_1H if interval=="1h" else LIMIT_15M)
+        df = await get_klines(session, symbol, LIMIT_1H if interval=="1h" else LIMIT_15M, LIMIT_1H if interval=="1h" else LIMIT_15M)
         if df is None: return None
 
         # EMA20 و EMA50
@@ -132,10 +132,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await asyncio.sleep(1)  # جلوگیری از FloodWait
 
 # ----------------- اجرای ربات -----------------
-if __name__ == "__main__":
-    app = Application.builder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button))
+app = Application.builder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CallbackQueryHandler(button))
 
-    # همین خط برای Render، مشکل asyncio حل شده
-    app.run_polling()
+await app.initialize()
+await app.start()
+await app.updater.start_polling()
