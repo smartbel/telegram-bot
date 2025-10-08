@@ -1,6 +1,7 @@
 import asyncio
 import aiohttp
 import pandas as pd
+import matplotlib.pyplot as plt
 import mplfinance as mpf
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -53,8 +54,14 @@ async def detect_cross(session, symbol, interval):
 
         # فقط سه کندل آخر بررسی شود
         df_last = df.iloc[-3:]
-        prev_ema20, prev_ema50 = df_last["EMA20"].iloc[-2], df_last["EMA50"].iloc[-2]
-        last_ema20, last_ema50 = df_last["EMA20"].iloc[-1], df_last["EMA50"].iloc[-1]
+
+        # کراس روی آخرین کندل
+        last_close = df_last["close"].iloc[-1]
+        prev_close = df_last["close"].iloc[-2]
+        last_ema20 = df_last["EMA20"].iloc[-1]
+        last_ema50 = df_last["EMA50"].iloc[-1]
+        prev_ema20 = df_last["EMA20"].iloc[-2]
+        prev_ema50 = df_last["EMA50"].iloc[-2]
 
         cross_up = prev_ema20 < prev_ema50 and last_ema20 > last_ema50
         cross_down = prev_ema20 > prev_ema50 and last_ema20 < last_ema50
@@ -122,14 +129,13 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                  addplot=addplot,
                  savefig=filename, show_nontrading=False)
         await query.message.reply_photo(open(filename,"rb"))
-        await asyncio.sleep(1)
+        await asyncio.sleep(1)  # جلوگیری از FloodWait
 
 # ----------------- اجرای ربات -----------------
-def main():
+if __name__ == "__main__":
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button))
-    app.run_polling()
 
-if __name__ == "__main__":
-    main()
+    # همین خط برای Render، مشکل asyncio حل شده
+    app.run_polling()
